@@ -2,26 +2,56 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.7.4.
 
-## Development server
+## Reproduction Steps
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+`git clone https://github.com/bchiatt/ngrx-data-aot-repro.git && cd ngrx-data-aot-repro`
 
-## Code scaffolding
+`npm install`
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+`ng serve --aot`
 
-## Build
+Note the following output in terminal:
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
+```text
+ERROR in ./src/app/app.module.ngfactory.js
+Module not found: Error: Can't resolve 'ngrx-data/utils/index' in '/Users/eastfive/Code/ngrx-data-aot-repro/src/app'
+```
 
-## Running unit tests
+## The Setup
+```
+import { BrowserModule } from '@angular/platform-browser';
+import { Injectable, NgModule } from '@angular/core';
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-## Running end-to-end tests
+import { AppComponent } from './app.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { NgrxDataModule, Pluralizer } from 'ngrx-data';
+import { HttpClientModule } from '@angular/common/http';
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
 
-## Further help
+@Injectable()
+export class NoopPluralizer implements Pluralizer {
+  pluralize(name: string) {
+    return name;
+  }
+}
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    StoreModule.forRoot({}),
+    EffectsModule.forRoot([]),
+    NgrxDataModule.forRoot({})
+  ],
+  providers: [
+    { provide: Pluralizer, useValue: NoopPluralizer }, // <-- Remove this line and AOT works
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+```
